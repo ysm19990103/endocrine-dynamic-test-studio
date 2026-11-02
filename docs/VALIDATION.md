@@ -27,9 +27,10 @@ Build: **1.0.0**. Review date: **2 November 2026**. All datasets and cases used 
 | CSV reimport | Source rows preserved; clinical confirmations reset |
 | Invalid import | Unsupported header rejected; active session unchanged |
 | JSON download | Edited DST value and complete session metadata verified independently |
-| SVG source view | Well-formed self-contained figure source available in a readonly copyable dialog; automated serialization tests pass |
+| SVG view and download | Copyable source dialog verified; Save SVG completed on the published site, and the downloaded XML parsed independently with five expected sample markers and no script elements |
+| Live deployment | Default OGTT loaded successfully; selecting a custom GH threshold updated the comparator immediately |
 
-The cloud browser did not return a completed SVG download event during the direct-download check. The SVG viewer therefore includes an explicit copy-source fallback, so users can save the generated XML as a local `.svg` file. CSV and JSON download completion was observed. This browser observation does not establish the cause of the SVG event limitation.
+CSV, JSON and the final SVG viewer’s Save SVG flow produced verified downloads. The SVG viewer also retains an explicit copy-source fallback for browsers that restrict file downloads.
 
 ## Remaining validation
 
