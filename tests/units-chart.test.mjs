@@ -1,0 +1,16 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {normalize,compareUnits,formatNumber} from '../app/units.mjs';
+import {chartSVG,escapeHTML} from '../app/chart.mjs';
+import {example} from '../app/examples.mjs';
+import {analyzeCase} from '../app/engine.mjs';
+for(const [a,value,unit,expected,target] of [['gh',2,'ng/mL',2,'ug/L'],['cortisol',10,'ug/dL',276,'nmol/L'],['glucose',100,'mg/dL',5.551,'mmol/L'],['insulin',6,'uIU/mL',6,'mIU/L'],['gip_total',50,'pg/mL',50,'ng/L'],['gip_active',10,'ng/L',10,'ng/L']])test(`${a} dimensional normalization`,()=>{const n=normalize(a,value,unit);assert(Math.abs(n.value-expected)<1e-12);assert.equal(n.unit,target);});
+for(const [value,expected] of [[402.9599999999999,-1],[402.96,0],[402.9600000000001,1]])test(`exact decimal cortisol comparison ${value}`,()=>assert.equal(compareUnits('cortisol',value,'nmol/L',14.6,'ug/dL'),expected));
+test('incompatible families have no comparison',()=>assert.equal(compareUnits('gh',1,'mIU/L',0.4,'ug/L'),null));
+test('unknown units and nonfinite normalization fail closed',()=>{assert.equal(normalize('gh',1,'unknown'),null);assert.equal(normalize('gh',NaN,'ug/L'),null);});
+test('small exponential numeric values compare without rounding',()=>assert.equal(compareUnits('gh',1e-8,'ng/mL',1.00000001e-8,'ug/L'),-1));
+test('formatting does not change numeric inputs',()=>{assert.equal(formatNumber(null),'—');assert.equal(formatNumber(1.1234567),'1.123');assert.equal(formatNumber(0.00001),'1.00e-5');});
+test('SVG connects only complete compatible series',()=>{const a=analyzeCase(example());assert(chartSVG(a.series.gh,a.results[0]).includes('<polyline'));const q=analyzeCase(example('quality'));assert(!chartSVG(q.series.gh,q.results[0]).includes('<polyline'));});
+test('SVG bounds are visibly distinct and have preserved relation',()=>{const a=analyzeCase(example('quality'));const svg=chartSVG(a.series.gip_total);assert(svg.includes('&lt;118'));assert(svg.includes('Markers only'));});
+test('SVG output is self-contained and includes accessible labels',()=>{const a=analyzeCase(example());const svg=chartSVG(a.series.gh,a.results[0],{exported:true});assert(svg.startsWith('<svg xmlns='));assert(svg.includes('<title>'));assert(svg.includes('Actual sample time (min)'));assert(!/<script|onload=|href="https:/.test(svg));});
+test('escaping protects HTML and SVG text sinks',()=>assert.equal(escapeHTML('<img src="x" onerror=\'x\'>&'),'&lt;img src=&quot;x&quot; onerror=&#39;x&#39;&gt;&amp;'));
